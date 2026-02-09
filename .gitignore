@@ -1,0 +1,8 @@
+/.idea
+/.settings
+/.vscode
+/build
+/cmake-build-debug-stm32
+/cmake-build-release-stm32
+.ioc
+.mxproject
