@@ -84,17 +84,21 @@ target_sources(stm32cubemx INTERFACE
     ../../Middlewares/Third_Party/FreeRTOS/Source/portable/GCC/ARM_CM4F/port.c
     ../../Core/Src/sysmem.c
     ../../Core/Src/syscalls.c
-    ../../Core/Src/tftlcd.c
     ../../Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_sram.c
     ../../Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_ll_fsmc.c
     ../../Core/Src/bmp280.c
-    ../../Core/Src/getdata.c
     ../../Core/Src/sht30.c
     ../../Core/Src/bh1750.c
     ../../Core/Src/hc_sr04.c
-    ../../Core/Src/bluetooth.c
+    ../../Core/Src/getdata.c
+    ../../Core/Src/tftlcd.c
     ../../Core/Src/ui.c
+    ../../Core/Src/bluetooth.c
+    ../../Core/Src/zigbee.c
     ../../Core/Src/usart2task.c
+    ../../Core/Src/ov7670.c
+    ../../Core/Src/cameratask.c
+    ../../Core/Src/sram.c
     ../../startup_stm32f407xx.s
 )
 

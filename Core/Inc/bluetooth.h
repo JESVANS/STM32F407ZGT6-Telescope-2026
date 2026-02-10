@@ -11,11 +11,7 @@
 
 #include "stm32f4xx_hal.h"
 #include <stdint.h>
-#include <stdarg.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif
 
 /* 默认资源（工程里已有 huart2） */
 extern UART_HandleTypeDef huart2;
@@ -27,10 +23,6 @@ extern UART_HandleTypeDef huart2;
 #define BT_DEFAULT_EN_PIN      GPIO_PIN_5      /* EN: 高→AT模式, 低→透传 */
 #define BT_DEFAULT_STATE_PORT  GPIOC
 #define BT_DEFAULT_STATE_PIN   GPIO_PIN_4      /* STATE: 高→已连接, 低→未连接 */
-
-/* 缓冲区大小 */
-#define BT_RX_BUF_SIZE         256U            /* 环形接收缓冲区字节数 */
-#define BT_TX_BUF_SIZE         256U            /* printf 格式化发送缓冲区 */
 
 /* 返回状态 */
 typedef enum {
@@ -60,47 +52,20 @@ typedef struct {
 /* 使用默认配置的全局实例（也可自己定义局部实例） */
 extern BT_Handle_t hBluetooth;
 
+extern uint8_t bt_has_new; // 标记是否有新数据
+
 /* 初始化：配置 EN(推挽输出, 默认拉低) 与 STATE(输入) 并标记已初始化 */
 BT_Status_t BT_Init(BT_Handle_t *hbt);
 
-/* 反初始化：仅复位标志，可按需添加 GPIO 反初始化 */
-BT_Status_t BT_DeInit(BT_Handle_t *hbt);
+/* Bluetooth UART 接收完成回调（需在 HAL_UART_RxCpltCallback 中调用） */
+void Bluetooth_UART_RxCpltCallback(void);
 
-/* 阻塞发送原始数据 */
-BT_Status_t BT_Send(BT_Handle_t *hbt, const uint8_t *data, uint16_t len, uint32_t timeout_ms);
+/* 发送透传数据（EN 必须为低） */
+BT_Status_t BT_Send(BT_Handle_t *hbt, const uint8_t *data, uint16_t len);
 
-/* 阻塞发送字符串 */
-BT_Status_t BT_SendString(BT_Handle_t *hbt, const char *str, uint32_t timeout_ms);
+/* 接收透传数据 */
+BT_Status_t BT_Receive(BT_Handle_t *hbt, uint8_t *buf, uint16_t len);
 
-/* 格式化阻塞发送（类似 printf） */
-BT_Status_t BT_Printf(BT_Handle_t *hbt, uint32_t timeout_ms, const char *fmt, ...);
-
-/* 中断发送原始数据（非阻塞，发送完成后触发 HAL_UART_TxCpltCallback） */
-BT_Status_t BT_Send_IT(BT_Handle_t *hbt, const uint8_t *data, uint16_t len);
-
-/* 中断发送字符串（非阻塞） */
-BT_Status_t BT_SendString_IT(BT_Handle_t *hbt, const char *str);
-
-/* 格式化中断发送（非阻塞，内部使用静态缓冲区） */
-BT_Status_t BT_Printf_IT(BT_Handle_t *hbt, const char *fmt, ...);
-
-/* 查询发送是否完成（1=空闲可发送, 0=正在发送中） */
-uint8_t BT_TxReady(BT_Handle_t *hbt);
-
-/* 阻塞接收指定字节数（等待缓冲区数据） */
-BT_Status_t BT_Receive(BT_Handle_t *hbt, uint8_t *buf, uint16_t len, uint32_t timeout_ms);
-
-/* 非阻塞：从环形缓冲区读取可用数据，返回实际字节数 */
-uint16_t BT_Read(BT_Handle_t *hbt, uint8_t *buf, uint16_t max_len);
-
-/* 非阻塞：从缓冲区读取一行（到 '\n'），返回行长度，0=无完整行 */
-uint16_t BT_ReadLine(BT_Handle_t *hbt, uint8_t *buf, uint16_t max_len);
-
-/* 查询是否收到完整行 */
-uint8_t BT_HasLine(BT_Handle_t *hbt);
-
-/* 查询缓冲区可用字节数 */
-uint16_t BT_Available(BT_Handle_t *hbt);
 
 /* 读取连接状态（直接读 STATE 引脚） */
 uint8_t BT_GetState(BT_Handle_t *hbt);
@@ -129,9 +94,4 @@ BT_SendAT已不再使用, 需要发送AT指令时 可直接在 蓝牙断开连�
 // BT_Status_t BT_SendAT(BT_Handle_t *hbt, const char *cmd,
 //                       char *resp_buf, uint16_t resp_len, uint32_t timeout_ms);
 
-
-#ifdef __cplusplus
-}
-#endif
-
-#endif
+#endif 

@@ -21,6 +21,7 @@
 #ifndef __USART_H__
 #define __USART_H__
 
+#include <stdint.h>
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -29,6 +30,7 @@ extern "C" {
 #include "main.h"
 
 /* USER CODE BEGIN Includes */
+extern uint8_t device_on_uart2; // 0: 无设备, 1: RS485, 2: Bluetooth, 3: ZigBee
 
 /* USER CODE END Includes */
 
@@ -50,6 +52,8 @@ void MX_USART3_UART_Init(void);
 void MX_USART6_UART_Init(void);
 
 /* USER CODE BEGIN Prototypes */
+
+
 
 /* USER CODE END Prototypes */
 

@@ -1,6 +1,6 @@
 #include "tftlcd.h"
 #include "stm32f4xx_hal.h"
-#include "cmsis_os.h"   //osDelay
+#include "cmsis_os2.h"   //osDelay
 #include "font.h"
 #include "image.h"
 #include "string.h"
@@ -1160,7 +1160,7 @@ void lcd_show_string(uint16_t x, uint16_t y, uint16_t width, uint16_t height, ui
             break;
         }
 
-        lcd_show_char(x, y, *p, size, 1, color);
+        lcd_show_char(x, y, *p, size, 0, color);
         x += size / 2;
         p++;
     }

@@ -31,7 +31,8 @@
 #include "getdata.h"
 #include "ui.h"
 #include "usart2task.h"
-
+#include "cameratask.h"
+#include "sram.h"
 
 
 
@@ -79,10 +80,23 @@ const osThreadAttr_t getdataTask_attributes = {
 osThreadId_t usart2TaskHandle;
 const osThreadAttr_t usart2Task_attributes = {
   .name = "usart2Task",
-  .stack_size = 512 * 4,
+  .stack_size = 256 * 4,
   .priority = (osPriority_t) osPriorityNormal,
 };
 
+osThreadId_t cameraTaskHandle;
+const osThreadAttr_t cameraTask_attributes = {
+  .name = "cameraTask",
+  .stack_size = 512 * 4,
+  .priority = (osPriority_t) osPriorityHigh,
+};
+
+osThreadId_t sramTestTaskHandle;
+const osThreadAttr_t sramTestTask_attributes = {
+  .name = "sramTestTask",
+  .stack_size = 256 * 4,
+  .priority = (osPriority_t) osPriorityBelowNormal,
+};
 
 /* USER CODE END Variables */
 /* Definitions for defaultTask */
@@ -97,8 +111,11 @@ const osThreadAttr_t defaultTask_attributes = {
 /* USER CODE BEGIN FunctionPrototypes */
 void LcdDisplayTask(void *argument);
 void IwdgFeedTask(void *argument);
-extern void GetDataTask(void *argument);
+void GetDataTask(void *argument);
 void Usart2Task(void *argument);
+
+void CameraTask(void *argument);
+void SramTestTask(void *argument);
 
 void StartDefaultTask(void *argument);
 
@@ -211,6 +228,8 @@ void MX_FREERTOS_Init(void) {
   iwdgTaskHandle = osThreadNew(IwdgFeedTask, NULL, &iwdgTask_attributes);
   getdataTaskHandle = osThreadNew(GetDataTask, NULL, &getdataTask_attributes);
   usart2TaskHandle = osThreadNew(Usart2Task, NULL, &usart2Task_attributes);
+  //cameraTaskHandle = osThreadNew(CameraTask, NULL, &cameraTask_attributes);
+  sramTestTaskHandle = osThreadNew(SramTestTask, NULL, &sramTestTask_attributes);
 
   /* USER CODE END RTOS_THREADS */
 
@@ -255,6 +274,35 @@ void IwdgFeedTask(void *argument)
   }
 }
 
+
+/**
+ * @brief  SRAM 测试任务
+ *         初始化 SRAM 并执行读写自检，结果显示在 LCD 上
+ *         测试完成后自动删除任务
+ */
+void SramTestTask(void *argument)
+{
+    char msg[40];
+
+    /* 等待 LCD 初始化完成 */
+    osDelay(500);
+
+    lcd_show_string(10, 600, 460, 24, 24, "SRAM Testing...", BLUE);
+
+    uint8_t result = SRAM_Test();
+
+    if (result == 0)
+    {
+        lcd_show_string(10, 630, 460, 24, 24, "SRAM Test: PASS (1MB OK)", GREEN);
+    }
+    else
+    {
+        lcd_show_string(10, 630, 460, 24, 24, "SRAM Test: FAIL !!!", RED);
+    }
+
+    /* 测试完成，删除自身 */
+    osThreadTerminate(osThreadGetId());
+}
 
 /* USER CODE END Application */
 

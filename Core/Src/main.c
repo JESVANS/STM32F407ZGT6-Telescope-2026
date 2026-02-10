@@ -18,7 +18,7 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
-#include "cmsis_os.h"
+#include "cmsis_os2.h"
 #include "adc.h"
 #include "can.h"
 #include "crc.h"
@@ -34,7 +34,7 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include "sram.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -115,6 +115,7 @@ int main(void)
   MX_RNG_Init();
   MX_CAN1_Init();
   /* USER CODE BEGIN 2 */
+  SRAM_Init();
   /* USER CODE END 2 */
 
   /* Init scheduler */

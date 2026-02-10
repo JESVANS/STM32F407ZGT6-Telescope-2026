@@ -3,7 +3,7 @@
 #include <string.h>
 #include <stdint.h>
 #include <stdbool.h>
-#include "cmsis_os.h"   //osDelay
+#include "cmsis_os2.h"   //osDelay
 
 extern I2C_HandleTypeDef hi2c1; /* 使用 I2C1 */
 

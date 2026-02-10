@@ -19,9 +19,13 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "dcmi.h"
+#include "ov7670.h"
+#include "stm32f4xx_hal_dcmi.h"
+#include "tftlcd.h"
 
 /* USER CODE BEGIN 0 */
-
+uint8_t g_ov_frame = 0;                 /* 帧率 */
+extern void jpeg_data_process(void);    /* JPEG数据处理函数 */
 /* USER CODE END 0 */
 
 DCMI_HandleTypeDef hdcmi;
@@ -51,7 +55,10 @@ void MX_DCMI_Init(void)
     Error_Handler();
   }
   /* USER CODE BEGIN DCMI_Init 2 */
+  DCMI->IER = 0x0;
 
+  __HAL_DCMI_ENABLE_IT(&hdcmi, DCMI_IT_FRAME);        /* 使能帧中断 */
+   __HAL_DCMI_ENABLE(&hdcmi);                          /* 使能DCMI */
   /* USER CODE END DCMI_Init 2 */
 
 }

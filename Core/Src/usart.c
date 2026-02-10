@@ -19,8 +19,11 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "usart.h"
+#include "zigbee.h"
+#include "bluetooth.h"
 
 /* USER CODE BEGIN 0 */
+uint8_t device_on_uart2 = 0; // 0: 无设备, 1: RS485, 2: Bluetooth, 3: ZigBee
 
 /* USER CODE END 0 */
 
@@ -347,4 +350,15 @@ void HAL_UART_MspDeInit(UART_HandleTypeDef* uartHandle)
 
 /* USER CODE BEGIN 1 */
 
+void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart)
+{
+
+}
+
+void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
+{
+  if(device_on_uart2==2) Bluetooth_UART_RxCpltCallback();
+  if(device_on_uart2==3) ZigBee_UART_RxCpltCallback();
+    
+}
 /* USER CODE END 1 */
