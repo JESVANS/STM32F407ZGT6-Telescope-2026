@@ -99,6 +99,10 @@ target_sources(stm32cubemx INTERFACE
     ../../Core/Src/ov7670.c
     ../../Core/Src/cameratask.c
     ../../Core/Src/sram.c
+    ../../Core/Src/eeprom.c
+    ../../Core/Src/flash.c
+    ../../Core/Src/wifi.c
+    ../../Core/Src/usart3task.c
     ../../startup_stm32f407xx.s
 )
 

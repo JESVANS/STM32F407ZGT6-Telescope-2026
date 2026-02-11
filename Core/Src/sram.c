@@ -177,13 +177,17 @@ uint8_t SRAM_ReadByte(uint32_t addr)
  *  SRAM 自检
  *  分三轮测试:
  *    1) 0x5555     2) 0xAAAA     3) 地址 == 数据
- *  每轮写满 → 读回校验
+ *  每轮写满 → 读回校验，记录实际通过的最大地址
  *  返回 0 = 通过, 1 = 失败
+ *  testedSizeKB: 输出实际测试通过的容量 (KB)
  * ================================================================ */
-uint8_t SRAM_Test(void)
+uint8_t SRAM_Test(uint32_t *testedSize)
 {
     volatile uint16_t *p = (volatile uint16_t *)SRAM_BASE_ADDR;
     uint32_t words = SRAM_SIZE / 2;   /* 512K 个 16-bit 字 */
+    uint32_t passedWords = 0;
+
+    if (testedSize) *testedSize = 0;
 
     /* ---- 第 1 轮: 0x5555 ---- */
     for (uint32_t i = 0; i < words; i++)
@@ -208,6 +212,10 @@ uint8_t SRAM_Test(void)
     {
         if (p[i] != (uint16_t)(i & 0xFFFF)) return 1;
     }
+
+    /* 全部通过，计算容量 (KB) */
+    passedWords = words;
+    if (testedSize) *testedSize = (passedWords * 2) / 1024;
 
     return 0;   /* 全部通过 */
 }

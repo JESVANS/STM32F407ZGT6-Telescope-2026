@@ -23,7 +23,7 @@ void    SRAM_WriteBuffer(uint16_t *pBuf, uint32_t addr, uint32_t len);
 void    SRAM_ReadBuffer(uint16_t *pBuf, uint32_t addr, uint32_t len);
 void    SRAM_WriteByte(uint32_t addr, uint8_t data);
 uint8_t SRAM_ReadByte(uint32_t addr);
-uint8_t SRAM_Test(void);   /* 返回 0 = OK, 1 = FAIL */
+uint8_t SRAM_Test(uint32_t *testedSize);   /* 返回 0 = OK, 1 = FAIL; testedSizeKB 输出实测容量 */
 
 /* SRAM 句柄（若外部需要，例如 DMA） */
 extern SRAM_HandleTypeDef hsram3;

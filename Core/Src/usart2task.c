@@ -1,6 +1,4 @@
 #include "usart2task.h"
-#include "zigbee.h"
-
 
 /* usart2接收内容（供 LCD 任务显示） */
 char usart2_rx_display[128] = {0};

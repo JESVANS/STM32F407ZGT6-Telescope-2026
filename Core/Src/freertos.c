@@ -33,6 +33,9 @@
 #include "usart2task.h"
 #include "cameratask.h"
 #include "sram.h"
+#include "eeprom.h"
+#include "flash.h"
+#include <stdio.h>
 
 
 
@@ -84,6 +87,13 @@ const osThreadAttr_t usart2Task_attributes = {
   .priority = (osPriority_t) osPriorityNormal,
 };
 
+osThreadId_t usart3TaskHandle;
+const osThreadAttr_t usart3Task_attributes = {
+  .name = "usart3Task",
+  .stack_size = 256 * 4,
+  .priority = (osPriority_t) osPriorityNormal,
+};
+
 osThreadId_t cameraTaskHandle;
 const osThreadAttr_t cameraTask_attributes = {
   .name = "cameraTask",
@@ -97,6 +107,22 @@ const osThreadAttr_t sramTestTask_attributes = {
   .stack_size = 256 * 4,
   .priority = (osPriority_t) osPriorityBelowNormal,
 };
+
+osThreadId_t eepromTestTaskHandle;
+const osThreadAttr_t eepromTestTask_attributes = {
+  .name = "eepromTestTask",
+  .stack_size = 256 * 4,
+  .priority = (osPriority_t) osPriorityBelowNormal,
+};
+
+osThreadId_t flashTestTaskHandle;
+const osThreadAttr_t flashTestTask_attributes = {
+  .name = "flashTestTask",
+  .stack_size = 512 * 4,
+  .priority = (osPriority_t) osPriorityBelowNormal,
+};
+
+
 
 /* USER CODE END Variables */
 /* Definitions for defaultTask */
@@ -113,9 +139,12 @@ void LcdDisplayTask(void *argument);
 void IwdgFeedTask(void *argument);
 void GetDataTask(void *argument);
 void Usart2Task(void *argument);
+void Usart3Task(void *argument);
 
 void CameraTask(void *argument);
 void SramTestTask(void *argument);
+void EepromTestTask(void *argument);
+void FlashTestTask(void *argument);
 
 void StartDefaultTask(void *argument);
 
@@ -228,8 +257,11 @@ void MX_FREERTOS_Init(void) {
   iwdgTaskHandle = osThreadNew(IwdgFeedTask, NULL, &iwdgTask_attributes);
   getdataTaskHandle = osThreadNew(GetDataTask, NULL, &getdataTask_attributes);
   usart2TaskHandle = osThreadNew(Usart2Task, NULL, &usart2Task_attributes);
+  usart3TaskHandle = osThreadNew(Usart3Task, NULL, &usart3Task_attributes);
   //cameraTaskHandle = osThreadNew(CameraTask, NULL, &cameraTask_attributes);
   sramTestTaskHandle = osThreadNew(SramTestTask, NULL, &sramTestTask_attributes);
+  eepromTestTaskHandle = osThreadNew(EepromTestTask, NULL, &eepromTestTask_attributes);
+  flashTestTaskHandle = osThreadNew(FlashTestTask, NULL, &flashTestTask_attributes);
 
   /* USER CODE END RTOS_THREADS */
 
@@ -283,21 +315,98 @@ void IwdgFeedTask(void *argument)
 void SramTestTask(void *argument)
 {
     char msg[40];
+    uint32_t testedSize = 0;
 
     /* 等待 LCD 初始化完成 */
     osDelay(500);
 
     lcd_show_string(10, 600, 460, 24, 24, "SRAM Testing...", BLUE);
 
-    uint8_t result = SRAM_Test();
+    uint8_t result = SRAM_Test(&testedSize);
 
     if (result == 0)
     {
-        lcd_show_string(10, 630, 460, 24, 24, "SRAM Test: PASS (1MB OK)", GREEN);
+        if (testedSize >= 1024)
+            sprintf(msg, "SRAM Test: PASS (%luMB)", testedSize / 1024);
+        else
+            sprintf(msg, "SRAM Test: PASS (%luKB)", testedSize);
+        lcd_show_string(10, 630, 460, 24, 24, msg, GREEN);
     }
     else
     {
         lcd_show_string(10, 630, 460, 24, 24, "SRAM Test: FAIL !!!", RED);
+    }
+
+    /* 测试完成，删除自身 */
+    osThreadTerminate(osThreadGetId());
+}
+
+/**
+ * @brief  EEPROM (AT24C02) 读写测试任务
+ *         执行写入/回读自检，结果显示在 LCD 上
+ *         测试完成后自动删除任务
+ */
+void EepromTestTask(void *argument)
+{
+    char msg[40];
+    uint16_t testedSize = 0;
+
+    /* 等待 LCD 初始化完成 */
+    osDelay(500);
+
+    lcd_show_string(10, 660, 460, 24, 24, "EEPROM Testing...", BLUE);
+
+    uint8_t result = AT24C02_Test(&testedSize);
+
+    if (result == 0)
+    {
+        sprintf(msg, "EEPROM Test: PASS (%dB)", testedSize);
+        lcd_show_string(10, 690, 460, 24, 24, msg, GREEN);
+    }
+    else
+    {
+        lcd_show_string(10, 690, 460, 24, 24, "EEPROM Test: FAIL !!!", RED);
+    }
+
+    /* 测试完成，删除自身 */
+    osThreadTerminate(osThreadGetId());
+}
+
+/**
+ * @brief  SPI Flash (W25Q128) 读写测试任务
+ *         执行 ID 校验 + 擦写回读自检，结果显示在 LCD 上
+ *         测试完成后自动删除任务
+ */
+void FlashTestTask(void *argument)
+{
+    char msg[40];
+    uint32_t testedSize = 0;
+
+    /* 等待 LCD 初始化完成 */
+    osDelay(500);
+
+    lcd_show_string(10, 720, 460, 24, 24, "Flash Testing...", BLUE);
+
+    /* 初始化驱动（含 PB14 CS GPIO 配置） */
+    W25Q128_Init();
+
+    uint8_t result = W25Q128_Test(&testedSize);
+
+    if (result == 0)
+    {
+        if (testedSize >= 1024)
+            sprintf(msg, "Flash Test: PASS (%luMB)", testedSize / 1024);
+        else
+            sprintf(msg, "Flash Test: PASS (%luKB)", testedSize);
+        lcd_show_string(10, 750, 460, 24, 24, msg, GREEN);
+    }
+    else if (result == 1)
+    {
+        lcd_show_string(10, 750, 460, 24, 24, "Flash Test: FAIL (ID ERR)", RED);
+    }
+    else
+    {
+        lcd_show_string(10, 750, 460, 24, 24, "Flash Test: FAIL (R/W ERR)", RED);
     }
 
     /* 测试完成，删除自身 */
